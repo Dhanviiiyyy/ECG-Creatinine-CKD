@@ -1,151 +1,160 @@
-﻿# ECG-Based Serum Creatinine Prediction — Data Pipeline (Step 1)
+# ECG-Based Serum Creatinine Prediction from 12-Lead ECG
 
-**IIT Hyderabad Semester Project**
-Supervised by **Prof. Amit Acharyya** & **Dr. Pabitra Das**
-
----
+**IIT Hyderabad Semester Project**  
+Supervised by Prof. Amit Acharyya and Dr. Pabitra Das
 
 ## Overview
 
-This repository implements Step 1 of a peer-reviewed biomedical AI pipeline:
-predicting continuous serum creatinine from raw 12-lead ECG waveforms
-(`[12 x 5000]`) using MIMIC-IV-ECG matched with labevents (itemid 50912).
+This repository is a research prototype for developing an ECG-based serum-creatinine prediction workflow.
 
-Downstream models (Steps 2-4):
-- From-scratch 1D-CNN baseline
-- 1D ResNet-34
-- ECG-FM / ST-MEM Foundation Model (frozen probe + LoRA adapter)
+The intended long-term task is to estimate continuous serum creatinine from a standard 10-second, 12-lead ECG waveform sampled at 500 Hz (`12 × 5000`), then derive eGFR for exploratory renal-risk analysis.
 
----
+The current repository supports a complete **synthetic-data pipeline**. Its purpose is to verify the software, preprocessing, patient-level split logic, storage schema, model-training workflow, and evaluation code before use with credentialed clinical data.
 
-## Project Structure
+Synthetic results are not clinical validation and must not be interpreted as evidence of real-world diagnostic performance.
 
-```
+## Current status
+
+Implemented:
+
+- Synthetic paired ECG and serum-creatinine data generation
+- Temporal ECG–lab matching with a configurable nearest-lab window
+- Patient-level train/validation/test splitting
+- ECG preprocessing, quality control, and HDF5 dataset construction
+- 1D-CNN and 1D ResNet-34 training workflows
+- Demographic baselines, regression metrics, derived eGFR calculations, and uncertainty utilities
+- Unit tests and generated dataset-quality reports
+
+Planned:
+
+- MIMIC-IV-ECG ingestion and linkage to MIMIC-IV laboratory measurements
+- Real-world cohort construction and quality control
+- Patient-level internal validation
+- Evaluation on a separate cross-dataset cohort
+- Integration of a real pretrained ECG foundation-model backbone
+
+## Important limitations
+
+- The repository currently runs in `synthetic` mode by default.
+- MIMIC ingestion is not yet implemented. Changing the configuration to `mode: "mimic"` will not create a real-data cohort yet.
+- The ECG foundation-model options currently use a placeholder backbone. They are interface prototypes, not pretrained foundation-model experiments.
+- eGFR is derived from predicted creatinine using demographic inputs; it is not an ECG-only measurement.
+- A single estimated eGFR must not be interpreted as a clinical diagnosis of chronic kidney disease.
+
+## Repository structure
+
+```text
 .
-|-- config/
-|   |-- pipeline_config.yaml      # All reproducibility parameters (SINGLE SOURCE OF TRUTH)
-|   |-- paths.py                  # Centralised I/O path resolution
-|
-|-- data/
-|   |-- synthetic/                # Synthetic demo dataset (pre-PhysioNet)
-|   |   |-- generate_synthetic_dataset.py
-|   |   |-- ecg_manifest.parquet  (generated)
-|   |   |-- lab_creatinine.parquet(generated)
-|   |   |-- waveforms/            (generated .npy files)
-|   |-- raw/                      (MIMIC-IV WFDB files, when available)
-|   |-- interim/                  (cohort_matched.parquet)
-|   |-- processed/                (preprocessed waveforms + HDF5)
-|
-|-- ecg_creatinine/               # Core library (clean-room implementation)
-|   |-- signal_processing.py      # Butterworth bandpass, notch, QC, z-score
-|   |-- temporal_matching.py      # Patient-level temporal matching + split
-|   |-- hdf5_utils.py             # HDF5 schema reader/writer
-|
-|-- pipeline/
-|   |-- 03_match_ecg_creatinine.py
-|   |-- 04_preprocess_signals.py
-|   |-- 05_build_hdf5.py
-|   |-- 06_validate_dataset.py
-|
-|-- tests/
-|   |-- conftest.py               # Shared fixtures
-|   |-- test_signal_filter.py     # Filter frequency response + pipeline
-|   |-- test_temporal_matching.py # Leakage + matching correctness
-|   |-- test_hdf5_schema.py       # Schema integrity
-|
-|-- reports/                      # QC HTML report (generated)
-|-- run_pipeline.py               # Single-entry master runner
-|-- requirements.txt
+├── config/
+│   ├── pipeline_config.yaml      # Reproducibility and pipeline settings
+│   └── paths.py                  # Centralised path resolution
+├── ecg_creatinine/               # Core signal-processing and data utilities
+├── pipeline/
+│   ├── generate_synthetic_dataset.py
+│   ├── 03_match_ecg_creatinine.py
+│   ├── 04_preprocess_signals.py
+│   ├── 05_build_hdf5.py
+│   └── 06_validate_dataset.py
+├── datasets/                     # HDF5 dataset and DataLoader code
+├── models/                       # CNN, ResNet, and foundation-model interfaces
+├── training/                     # Losses and training loop
+├── evaluation/                   # Metrics, eGFR, baselines, uncertainty
+├── notebooks/                    # Exploratory and training notebooks
+├── tests/                        # Unit tests
+├── docs/                         # Methodology and references
+├── run_pipeline.py               # Synthetic data-pipeline entry point
+├── run_training.py               # Model-training entry point
+└── requirements.txt
 ```
 
----
+Generated data, model checkpoints, local environments, and experiment outputs are intentionally excluded from version control.
 
-## Quick Start (Synthetic Mode)
+## Setup
+
+Use a project-specific environment. Python 3.10 is recommended because the dependencies are pinned and tested for that version.
 
 ```bash
-# 1. Install dependencies
+conda create --prefix .conda python=3.10 -y
+conda activate .conda
 pip install -r requirements.txt
+```
 
-# 2. Run the full pipeline (synthetic data, 5000 records)
+## Run the synthetic pipeline
+
+The default configuration generates 5,000 synthetic records, matches ECGs to synthetic creatinine values, preprocesses the waveforms, constructs an HDF5 dataset, and produces a quality-control report.
+
+```bash
 python run_pipeline.py
-
-# 3. View QC report
-open reports/dataset_qc_report.html   # macOS / Colab browser
 ```
 
----
+To skip report generation:
 
-## Signal Processing
-
-| Step | Method | Parameters |
-|------|--------|-----------|
-| Resample | `scipy.signal.resample_poly` (GCD-reduced rational ratio) | 500 Hz target |
-| Bandpass | 4th-order zero-phase Butterworth (`sosfiltfilt`) | 0.5 - 40 Hz |
-| Notch | Zero-phase IIR notch (`iirnotch` -> `zpk2sos` -> `sosfiltfilt`) | 60 Hz, Q=30 |
-| QC | Peak-to-peak amplitude check per lead | 0.05 - 20.0 mV |
-| Normalise | Per-lead z-score (mean=0, std=1) | stored alongside raw |
-
----
-
-## HDF5 Schema (v1.0.0)
-
-```
-/train/<study_id>/
-    waveform        float32 [12, 5000]   z-scored, filtered
-    waveform_raw    float32 [12, 5000]   filtered, not z-scored (mV)
-    label           float32 scalar       serum creatinine (mg/dL)
-    attrs: subject_id, ecg_time, lab_time, delta_t_hours,
-           lead_names, fs=500, pipeline_version, git_hash, seed
-/val/  (same)
-/test/ (same)
-/metadata/
-    cohort_stats    JSON (per-split N, creatinine mean/std/quartiles)
-    config_snapshot YAML (full pipeline_config.yaml)
+```bash
+python run_pipeline.py --skip-validate
 ```
 
----
+Generated outputs remain local under `data/` and are not uploaded to GitHub.
 
-## Key Methodological Safeguards
+## Train a model
 
-- **Patient-level splitting**: `subject_id` assignment happens at Stage 3,
-  BEFORE any waveform is loaded, preventing data leakage.
-- **Leakage assertion**: `verify_no_subject_overlap()` will raise
-  `AssertionError` if any subject appears in multiple splits.
-- **Temporal window**: +/-6 h (strict physiological fidelity).
-- **Reproducibility**: every output embeds seed, pipeline version, git hash,
-  and a full YAML config snapshot.
+After building the synthetic HDF5 dataset:
 
----
+```bash
+python run_training.py --model cnn
+```
 
-## Running Tests
+Available model options:
+
+```bash
+python run_training.py --model cnn
+python run_training.py --model resnet34
+python run_training.py --model ecgfm_probe
+python run_training.py --model ecgfm_lora
+```
+
+The ECG foundation-model commands currently use a mock backbone and are included to validate the training interfaces. They are not equivalent to training or fine-tuning a released pretrained ECG foundation model.
+
+## Signal-processing workflow
+
+Each waveform is processed as follows:
+
+1. Resample to 500 Hz when required.
+2. Apply a zero-phase 0.5–40 Hz Butterworth bandpass filter.
+3. Apply waveform quality-control checks, including lead amplitude limits.
+4. Standardise each lead with z-score normalisation.
+5. Store both filtered raw-scale and normalised waveform representations in HDF5.
+
+The target input representation is 12 leads by 5,000 samples.
+
+## Data-splitting and reproducibility safeguards
+
+- All records from the same `subject_id` are assigned to one split only.
+- The code checks for patient overlap across train, validation, and test splits.
+- ECG–lab pairs use the nearest creatinine result within the configured time window.
+- Generated outputs record relevant configuration values, random seed, pipeline version, and Git revision where available.
+
+## Tests
 
 ```bash
 pytest tests/ -v --tb=short
+```
+
+For coverage reporting:
+
+```bash
 pytest tests/ -v --tb=short --cov=ecg_creatinine --cov-report=term-missing
 ```
 
----
+## Roadmap
 
-## Switching to Real MIMIC-IV Data
+1. Complete large-scale synthetic pipeline stress testing.
+2. Implement MIMIC-IV-ECG cohort ingestion and laboratory matching.
+3. Train and validate models using patient-level held-out test data.
+4. Evaluate robustness across clinically relevant subgroups.
+5. Perform cross-dataset evaluation with carefully documented waveform and cohort differences.
 
-1. Obtain PhysioNet credentialed access to `mimic-iv-ecg/1.0`
-2. Set `ECG_PROJECT_ROOT` environment variable
-3. In `config/pipeline_config.yaml`, change `dataset.mode: "mimic"`
-4. Run `python run_pipeline.py`
+## Academic integrity and attribution
 
----
+This repository is original project code. Scientific methods, datasets, and external literature are documented in `docs/METHODOLOGY.md` and `docs/references.bib`.
 
-## Citation / Attribution
-
-All code written from first principles. No code copied from external repositories.
-Filter design follows standard digital signal processing theory (Proakis & Manolakis, 2006).
-Synthetic creatinine distribution parameterised from NHANES 2017-2018 and
-Coresh et al. (2007) JAMA CKD prevalence estimates.
-
----
-
-## Academic Integrity Statement
-
-This codebase was written clean-room for academic publication purposes.
-All external references are cited in module docstrings. No raw code chunks
-were copied from GitHub or other repositories without explicit license compliance.
+No raw MIMIC data, patient-level data, credentials, or access tokens are stored in this repository.
