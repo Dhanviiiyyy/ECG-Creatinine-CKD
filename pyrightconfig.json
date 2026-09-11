@@ -1,0 +1,15 @@
+{
+  "include": ["."],
+  "extraPaths": [
+    ".",
+    "C:/Users/LENOVO/AppData/Local/Programs/Python/Python313/Lib/site-packages"
+  ],
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportMissingTypeStubs": "none",
+  "reportUnknownMemberType": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownArgumentType": "none",
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Windows"
+}
