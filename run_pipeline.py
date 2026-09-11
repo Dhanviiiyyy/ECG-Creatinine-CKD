@@ -74,7 +74,7 @@ def main(config_path: str | None = None, skip_validate: bool = False) -> None:
     # -------------------------------------------------------------------------
     if mode == "synthetic":
         _banner("STAGE 0", "Generating Synthetic Dataset")
-        from data.synthetic.generate_synthetic_dataset import generate_synthetic_dataset
+        from pipeline.generate_synthetic_dataset import generate_synthetic_dataset
         generate_synthetic_dataset(
             n_records=int(cfg["dataset"]["n_records"]),
             n_subjects=int(cfg["dataset"]["pilot_subject_pool"]),
