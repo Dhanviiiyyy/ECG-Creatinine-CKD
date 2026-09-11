@@ -1,0 +1,51 @@
+{
+  "model": "cnn",
+  "checkpoint": "checkpoints\\cnn\\best_checkpoint.pth",
+  "dl_metrics": {
+    "mae": 1.388543606797854,
+    "rmse": 1.8532749517435005,
+    "r2": -1.3954505276652394,
+    "pearson_r": -0.82423426297157,
+    "egfr_mae": 149.47913077077018,
+    "ckd_stage_acc": 0.7333333333333333,
+    "ckd_screening_auroc": 0.0,
+    "ckd_screening_sens": 0.0,
+    "ckd_screening_spec": 1.0,
+    "ckd_screening_f1": 0.0,
+    "screening": {
+      "auroc": 0.0,
+      "sensitivity": 0.0,
+      "specificity": 1.0,
+      "ppv": NaN,
+      "npv": 0.8666666666666667,
+      "f1": 0.0,
+      "prevalence": 0.13333333333333333
+    }
+  },
+  "demographic_baseline": {
+    "mae": 0.6846696919289187,
+    "rmse": 1.2356011718851627,
+    "r2": -0.06479037568301482,
+    "pearson_r": NaN,
+    "egfr_mae": 35.909581890803906,
+    "ckd_stage_acc": 0.7333333333333333,
+    "ckd_screening_auroc": 0.5,
+    "ckd_screening_sens": 0.0,
+    "ckd_screening_spec": 1.0,
+    "ckd_screening_f1": 0.0,
+    "screening": {
+      "auroc": 0.5,
+      "sensitivity": 0.0,
+      "specificity": 1.0,
+      "ppv": NaN,
+      "npv": 0.8666666666666667,
+      "f1": 0.0,
+      "prevalence": 0.13333333333333333
+    },
+    "weights": {
+      "intercept": 1.22708943615789,
+      "beta_age": 0.0,
+      "beta_sex": 0.0
+    }
+  }
+}

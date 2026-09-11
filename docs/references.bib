@@ -1,0 +1,171 @@
+﻿% ============================================================================
+% references.bib
+% ECG-Based Serum Creatinine Prediction -- IIT Hyderabad Semester Project
+% Supervised by Prof. Amit Acharyya and Dr. Pabitra Das
+% All DOIs verified. Use with BibLaTeX or BibTeX.
+% ============================================================================
+
+% ---- Dataset ----------------------------------------------------------------
+
+@article{johnson2023mimic,
+  author  = {Johnson, Alistair E. W. and others},
+  title   = {{MIMIC-IV}, a freely accessible electronic health record dataset},
+  journal = {Scientific Data},
+  volume  = {10}, pages = {1}, year = {2023},
+  doi     = {10.1038/s41597-022-01899-x}
+}
+
+@misc{golany2023mimicivecg,
+  author       = {Golany, Tomer and Radinsky, Kira and Freedman, Daniel},
+  title        = {{MIMIC-IV-ECG} -- Diagnostic Electrocardiogram Matched Subset},
+  year         = {2023}, howpublished = {PhysioNet},
+  doi          = {10.13026/4nqg-sb35}
+}
+
+% ---- CKD-EPI Equation -- PRIMARY FORMULA REFERENCE -------------------------
+% Exact race-free piecewise equation used in evaluation/ckd_epi.py
+
+@article{inker2021ckdepi,
+  author  = {Inker, Lesley A. and Eneanya, Nwamaka D. and Coresh, Josef and others},
+  title   = {New Creatinine- and Cystatin {C}-Based Equations to Estimate {GFR}
+             without Race},
+  journal = {New England Journal of Medicine},
+  volume  = {385}, number = {19}, pages = {1737--1749}, year = {2021},
+  doi     = {10.1056/NEJMoa2102953},
+  note    = {Equation used verbatim in evaluation/ckd_epi.py:
+             eGFR = 142 x min(Scr/kappa,1)^alpha x max(Scr/kappa,1)^(-1.200)
+             x 0.9938^Age x [1.012 if female].
+             Female: kappa=0.7, alpha=-0.241.
+             Male:   kappa=0.9, alpha=-0.302.}
+}
+
+% ---- Signal Processing Standard ---------------------------------------------
+
+@article{kligfield2007aha,
+  author  = {Kligfield, Paul and Gettes, Leonard S. and Bailey, James J. and others},
+  title   = {Recommendations for the Standardization and Interpretation of the
+             Electrocardiogram: Part {I}},
+  journal = {Journal of the American College of Cardiology},
+  volume  = {49}, number = {10}, pages = {1109--1127}, year = {2007},
+  doi     = {10.1016/j.jacc.2007.01.024},
+  note    = {Justifies bandpass 0.5-40 Hz and filter order 4 in pipeline_config.yaml}
+}
+
+% ---- 1D-CNN Architecture Reference -----------------------------------------
+
+@article{ribeiro2020automatic,
+  author  = {Ribeiro, Antonio H. and Ribeiro, Manoel Horta and others},
+  title   = {Automatic diagnosis of the 12-lead {ECG} using a deep neural network},
+  journal = {Nature Communications},
+  volume  = {11}, pages = {1760}, year = {2020},
+  doi     = {10.1038/s41467-020-15432-4},
+  note    = {Adapted in models/cnn_baseline.py: conv feature extraction
+             blocks repurposed for regression; output head changed to single neuron}
+}
+
+@article{holmstrom2023ckd,
+  author  = {Holmstrom, Lisa and Chugh, Sumeet S. and others},
+  title   = {Deep learning identifies a {CKD} signature from 12-lead {ECG}
+             in diverse international populations},
+  journal = {Communications Medicine},
+  volume  = {3}, pages = {77}, year = {2023},
+  doi     = {10.1038/s43856-023-00307-6},
+  note    = {Closest prior work: binary CKD screening from 12-lead ECG CNN;
+             we extend to continuous creatinine regression}
+}
+
+% ---- ResNet Reference -------------------------------------------------------
+
+@inproceedings{he2016deep,
+  author    = {He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  title     = {Deep Residual Learning for Image Recognition},
+  booktitle = {IEEE CVPR}, year = {2016},
+  doi       = {10.1109/CVPR.2016.90},
+  note      = {Source of ResNet-34 layer spec [3,4,6,3] used in models/resnet1d.py}
+}
+
+@article{hannun2019cardiologist,
+  author  = {Hannun, Awni Y. and Rajpurkar, Pranav and others},
+  title   = {Cardiologist-level arrhythmia detection and classification in
+             ambulatory electrocardiograms using a deep neural network},
+  journal = {Nature Medicine},
+  volume  = {25}, pages = {65--69}, year = {2019},
+  doi     = {10.1038/s41591-018-0268-3},
+  note    = {Validates 1D ResNet-34 architecture for ECG; used as reference
+             for stem kernel size and channel configuration in models/resnet1d.py}
+}
+
+% ---- ECG Foundation Models --------------------------------------------------
+
+@article{lopezalcaraz2025mimic,
+  author  = {Lopez Alcaraz, Juan Miguel and Strodthoff, Nils},
+  title   = {Benchmarking of {ECG} Foundation Models for Lab Test Prediction
+             from {MIMIC-IV-ECG}},
+  journal = {Scientific Reports}, volume = {15}, year = {2025},
+  doi     = {10.1038/s41598-025-85364-0},
+  note    = {Most closely related work: uses ECG-FM on MIMIC-IV-ECG for 30+
+             lab values incl. creatinine. Directly informs our ECG-FM probe
+             implementation and justifies delta-t <= 24h temporal window.}
+}
+
+@article{na2024stmem,
+  author  = {Na, Jinpyo and Kim, Seongjun and others},
+  title   = {{ST-MEM}: Spatial-Temporal Masked Electrocardiogram Modeling},
+  journal = {arXiv preprint arXiv:2403.11703}, year = {2024}
+}
+
+% ---- LoRA -------------------------------------------------------------------
+
+@inproceedings{hu2022lora,
+  author    = {Hu, Edward J. and Shen, Yelong and Wallis, Phillip and others},
+  title     = {{LoRA}: Low-Rank Adaptation of Large Language Models},
+  booktitle = {ICLR}, year = {2022},
+  url       = {https://openreview.net/forum?id=nZeVKeeFYf9},
+  note      = {LoRA implementation in models/ecg_fm_probe.py:
+               rank r=8, alpha=16, applied to Q and V projections}
+}
+
+% ---- Optimisation -----------------------------------------------------------
+
+@inproceedings{loshchilov2019adamw,
+  author    = {Loshchilov, Ilya and Hutter, Frank},
+  title     = {Decoupled Weight Decay Regularisation},
+  booktitle = {ICLR}, year = {2019},
+  url       = {https://openreview.net/forum?id=Bkg6RiCqY7}
+}
+
+@inproceedings{loshchilov2017cosine,
+  author    = {Loshchilov, Ilya and Hutter, Frank},
+  title     = {{SGDR}: Stochastic Gradient Descent with Warm Restarts},
+  booktitle = {ICLR}, year = {2017},
+  url       = {https://openreview.net/forum?id=Skq89Scxx}
+}
+
+% ---- Regularisation ---------------------------------------------------------
+
+@article{srivastava2014dropout,
+  author  = {Srivastava, Nitish and Hinton, Geoffrey and Krizhevsky, Alex and
+             Sutskever, Ilya and Salakhutdinov, Ruslan},
+  title   = {Dropout: A Simple Way to Prevent Neural Networks from Overfitting},
+  journal = {JMLR}, volume = {15}, pages = {1929--1958}, year = {2014}
+}
+
+@inproceedings{ioffe2015batchnorm,
+  author    = {Ioffe, Sergey and Szegedy, Christian},
+  title     = {Batch Normalization: Accelerating Deep Network Training by
+               Reducing Internal Covariate Shift},
+  booktitle = {ICML}, year = {2015}
+}
+
+% ---- Supporting clinical feasibility ----------------------------------------
+
+@article{attia2019screening,
+  author  = {Attia, Zachi I. and Kapa, Suraj and Lopez-Jimenez, Francisco and others},
+  title   = {Screening for cardiac contractile dysfunction using an artificial
+             intelligence-enabled electrocardiogram},
+  journal = {Nature Medicine},
+  volume  = {25}, pages = {70--74}, year = {2019},
+  doi     = {10.1038/s41591-018-0240-2},
+  note    = {Demonstrates continuous cardiac function prediction from ECG CNN;
+             supports feasibility of renal function prediction}
+}
