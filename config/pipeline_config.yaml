@@ -1,0 +1,85 @@
+# =============================================================================
+# pipeline_config.yaml
+# Central configuration for the ECG-Creatinine prediction pipeline.
+# IIT Hyderabad — ECG-Based Serum Creatinine Prediction
+# Supervised by Prof. Amit Acharyya & Dr. Pabitra Das
+# =============================================================================
+
+# -- Reproducibility --
+reproducibility:
+  global_seed: 42
+  numpy_seed: 42
+  torch_seed: 42
+
+# -- Dataset --
+dataset:
+  mode: "synthetic"
+  n_records: 5000
+  pilot_subject_pool: 3000
+
+  physionet:
+    database: "mimic-iv-ecg/1.0"
+    creatinine_itemid: 50912
+    creatinine_unit: "mg/dL"
+    creatinine_min: 0.1
+    creatinine_max: 20.0
+
+# -- Temporal Matching --
+temporal_matching:
+  delta_t_hours: 6
+  strategy: "nearest"
+
+# -- Signal Processing --
+signal:
+  target_fs_hz: 500
+  n_leads: 12
+  n_samples: 5000
+  lead_names:
+    - "I"
+    - "II"
+    - "III"
+    - "aVR"
+    - "aVL"
+    - "aVF"
+    - "V1"
+    - "V2"
+    - "V3"
+    - "V4"
+    - "V5"
+    - "V6"
+
+  bandpass:
+    low_hz: 0.5
+    high_hz: 40.0
+    order: 4
+    method: "sosfiltfilt"
+
+  notch:
+    freq_hz: 60.0
+    quality_factor: 30.0
+
+  amplitude_qc:
+    min_peak_to_peak_mv: 0.05
+    max_peak_to_peak_mv: 20.0
+
+  normalization: "z_score"
+  store_raw: true
+
+# -- HDF5 Output --
+hdf5:
+  compression: "gzip"
+  compression_opts: 4
+  schema_version: "1.0.0"
+
+# -- Dataset Splits --
+splits:
+  train: 0.70
+  val:   0.15
+  test:  0.15
+  stratify_on: "creatinine_quartile"
+
+# -- Foundation Model Compatibility --
+foundation_model:
+  target: "ECG-FM/ST-MEM"
+  expected_input_shape: [12, 5000]
+  expected_dtype: "float32"
