@@ -1,0 +1,23 @@
+# Python bytecode and tooling caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Notebooks and local editor settings
+.ipynb_checkpoints/
+.vscode/
+
+# Local data, trained models, and experiment outputs
+data/
+datasets/
+checkpoints/
+outputs/
+runs/
+wandb/
+
+# Local secrets and environments
+.env
+.venv/
+venv/
+.conda/
