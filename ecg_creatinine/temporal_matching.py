@@ -92,6 +92,10 @@ def match_ecg_to_creatinine(
         lab_df["charttime"] = lab_df["charttime"].dt.tz_localize(None)
 
     tolerance = datetime.timedelta(hours=float(delta_t_hours))
+    
+    # Make subject_id the same integer type in both DataFrames
+    ecg_manifest["subject_id"] = ecg_manifest["subject_id"].astype("int64")
+    lab_df["subject_id"] = lab_df["subject_id"].astype("int64")
 
     # Identify metadata columns to preserve
     extra_cols = [
